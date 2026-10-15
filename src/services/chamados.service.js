@@ -2,7 +2,7 @@ const chamados = require("../data/chamados")
 let proximoId = Math.max(...chamados.map(chamado => chamado.id)) + 1;
 const prioridadesValidas = ["Baixa", "Média", "Alta"];
 const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
-const statusValidos = ["Em andamento", "Aberto", "Finalizado"]
+const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
 function criarChamadoService(dados){
     const {titulo, descricao, solicitante, categoria, prioridade} = dados;
     if(!titulo || !descricao || !solicitante || !categoria || !prioridade){

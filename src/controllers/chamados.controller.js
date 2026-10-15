@@ -1,7 +1,28 @@
 const chamados = require("../data/chamados")
+const prioridadesValidas = ["Baixa", "Média", "Alta"];
+const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
+const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
 const {criarChamadoService, atualizarChamadoService, deletarChamadoService} = require("../services/chamados.service")
 function listarChamados(req, res){
-    res.json(chamados)
+    const {status, prioridade, categoria} = req.query;
+    if(!status && !prioridade && !categoria){
+        return res.json(chamados);
+    }
+    if(status && !statusValidos.includes(status)){
+        return res.status(400).json({mensagem: "Status inválido"});
+    }
+    if(prioridade && !prioridadesValidas.includes(prioridade)){
+        return res.status(400).json({mensagem: "Prioridade inválida"});
+    }
+    if(categoria && !categoriasValidas.includes(categoria)){
+        return res.status(400).json({mensagem: "Categoria inválida"});
+    }
+    const chamadosFiltrados = chamados.filter(c =>
+    (!status || c.status === status) &&
+    (!prioridade || c.prioridade === prioridade) &&
+    (!categoria || c.categoria === categoria)
+);
+    res.json(chamadosFiltrados);
 };
 function buscarChamadoPorId(req, res){
     const id = Number(req.params.id);
