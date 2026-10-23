@@ -4,10 +4,17 @@ const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
 const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
 const {criarChamadoService, atualizarChamadoService, deletarChamadoService} = require("../services/chamados.service")
 function listarChamados(req, res){
-    const {status, prioridade, categoria} = req.query;
-    if(!status && !prioridade && !categoria){
-        return res.json(chamados);
+    const {status, prioridade, categoria, pagina, limite} = req.query;
+    const paginaNum = pagina === undefined ? 1 : Number(pagina);
+    const limiteNum = limite === undefined ? 10 : Number(limite);
+    if(!Number.isInteger(paginaNum) || paginaNum < 1){
+        return res.status(400).json({mensagem: "Página inválida"});
     }
+    if (!Number.isInteger(limiteNum) || limiteNum < 1 || limiteNum > 100) {
+        return res.status(400).json({mensagem: "Limite inválido. Informe um inteiro entre 1 e 100."});
+    }
+    const inicio = (paginaNum - 1) * limiteNum;
+    const fim = inicio + limiteNum;
     if(status && !statusValidos.includes(status)){
         return res.status(400).json({mensagem: "Status inválido"});
     }
@@ -22,7 +29,17 @@ function listarChamados(req, res){
     (!prioridade || c.prioridade === prioridade) &&
     (!categoria || c.categoria === categoria)
 );
-    res.json(chamadosFiltrados);
+    const totalChamados = chamadosFiltrados.length;
+    const totalPaginas = Math.ceil(totalChamados / limiteNum);
+    if(paginaNum > totalPaginas && totalChamados > 0){
+        return res.status(400).json({mensagem: "Página inválida"});
+    }
+    const chamadospaginados = chamadosFiltrados.slice(inicio, fim);
+    res.setHeader("X-Total-Chamados", String(totalChamados));
+    res.setHeader("X-Total-Paginas", String(totalPaginas));
+    res.setHeader("X-Pagina-Atual", String(paginaNum));
+    res.setHeader("X-Chamados-Por-Pagina", String(limiteNum));
+    res.json(chamadospaginados);
 };
 function buscarChamadoPorId(req, res){
     const id = Number(req.params.id);
