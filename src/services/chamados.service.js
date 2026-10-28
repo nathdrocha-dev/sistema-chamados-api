@@ -1,9 +1,7 @@
-const chamados = require("../data/chamados")
-let proximoId = Math.max(...chamados.map(chamado => chamado.id)) + 1;
 const prioridadesValidas = ["Baixa", "Média", "Alta"];
 const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
 const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
-function criarChamadoService(dados){
+async function criarChamadoService(dados){
     const {titulo, descricao, solicitante, categoria, prioridade} = dados;
     if(!titulo || !descricao || !solicitante || !categoria || !prioridade){
             throw new Error("Todos os campos são obrigatórios!")
@@ -14,20 +12,14 @@ function criarChamadoService(dados){
         if(!categoriasValidas.includes(categoria)){
             throw new Error("Categoria Inválida!")
         }
-        const novoChamado = {
-        id: proximoId,
-        titulo,
-        descricao,
-        solicitante,
-        categoria,
-        prioridade,
-        status: "Aberto"
-        };
-        chamados.push(novoChamado);
-        proximoId++;
-        return novoChamado;
+        const [resultado] = await pool.query(`
+            INSERT INTO chamados (titulo, descricao, solicitante, categoria, prioridade, status)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `, [titulo, descricao, solicitante, categoria, prioridade, "Aberto"]);
+        const [linhas] = await pool.execute(`SELECT * FROM chamados WHERE id = ?`, [resultado.insertId]);
+        return linhas[0];
 };
-function atualizarChamadoService(id, dados){
+async function atualizarChamadoService(id, dados){
     const idNumerico = Number(id);
     const {status} = dados;
     const chamado = chamados.find(c => c.id === idNumerico);
@@ -37,17 +29,35 @@ function atualizarChamadoService(id, dados){
     if(!statusValidos.includes(status)){
         throw new Error("Status inválido");
     }
-    chamado.status = status;
-    return chamado;
+    await pool.execute(`UPDATE chamados SET status = ? WHERE id = ?`, [status, idNumerico]);
+    const chamadoAtualizado = await buscarChamadoPorIdService(idNumerico);
+    return chamadoAtualizado;
 }
-function deletarChamadoService(id){
-    const idNumerico = Number(id);
-    const index = chamados.findIndex(c => c.id === idNumerico);
-    if(index === -1){
+async function deletarChamadoService(id){
+    const chamado = await buscarChamadoPorIdService(id);
+    if(!chamado){
         throw new Error("Chamado não encontrado");
     }
-    const chamadoDeletado = chamados[index];
-    chamados.splice(index, 1);
-    return chamadoDeletado;
+    const [resultado] = await pool.execute(`DELETE FROM chamados WHERE id = ?`, [id]);
+    if(resultado.affectedRows === 0){
+        throw new Error("Chamado não encontrado");
+    }
+    return chamado;
 }
-module.exports = {criarChamadoService, atualizarChamadoService, deletarChamadoService}
+module.exports = {criarChamadoService, atualizarChamadoService, deletarChamadoService, buscarTodosChamados, buscarChamadoPorIdService};
+const pool = require("../database");
+
+async function buscarTodosChamados() {
+    const [linhas] = await pool.query(
+        "SELECT * FROM chamados"
+    );
+
+    return linhas;
+}
+async function buscarChamadoPorIdService(id) {
+    const [linhas] = await pool.query(
+        "SELECT * FROM chamados WHERE id = ?",
+        [id]
+    );
+    return linhas[0];
+}
