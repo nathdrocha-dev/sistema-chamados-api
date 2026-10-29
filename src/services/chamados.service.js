@@ -1,15 +1,13 @@
-const prioridadesValidas = ["Baixa", "Média", "Alta"];
-const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
-const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
+const {PRIORIDADES_VALIDAS, CATEGORIAS_VALIDAS, STATUS_VALIDOS} = require("../constants/chamados.constants");
 async function criarChamadoService(dados){
     const {titulo, descricao, solicitante, categoria, prioridade} = dados;
     if(!titulo || !descricao || !solicitante || !categoria || !prioridade){
             throw new Error("Todos os campos são obrigatórios!")
         }
-        if(!prioridadesValidas.includes(prioridade)){
+        if(!PRIORIDADES_VALIDAS.includes(prioridade)){
             throw new Error("Prioridade Inválida!")
         }
-        if(!categoriasValidas.includes(categoria)){
+        if(!CATEGORIAS_VALIDAS.includes(categoria)){
             throw new Error("Categoria Inválida!")
         }
         const [resultado] = await pool.query(`
@@ -22,11 +20,11 @@ async function criarChamadoService(dados){
 async function atualizarChamadoService(id, dados){
     const idNumerico = Number(id);
     const {status} = dados;
-    const chamado = chamados.find(c => c.id === idNumerico);
+    const chamado = await buscarChamadoPorIdService(idNumerico);
     if(!chamado){
        throw new Error("Chamado não encontrado");
     }
-    if(!statusValidos.includes(status)){
+    if(!STATUS_VALIDOS.includes(status)){
         throw new Error("Status inválido");
     }
     await pool.execute(`UPDATE chamados SET status = ? WHERE id = ?`, [status, idNumerico]);
@@ -46,14 +44,41 @@ async function deletarChamadoService(id){
 }
 module.exports = {criarChamadoService, atualizarChamadoService, deletarChamadoService, buscarTodosChamados, buscarChamadoPorIdService};
 const pool = require("../database");
-
-async function buscarTodosChamados() {
-    const [linhas] = await pool.query(
-        "SELECT * FROM chamados"
+async function buscarTodosChamados(filtros) {
+    const {status, categoria, prioridade, pagina, limite} = filtros;
+    const condicoes = [];
+    const parametros = [];
+    if (status) {
+        condicoes.push("status = ?");
+        parametros.push(status);
+    }
+    if (categoria) {
+        condicoes.push("categoria = ?");
+        parametros.push(categoria);
+    }
+    if (prioridade) {
+        condicoes.push("prioridade = ?");
+        parametros.push(prioridade);
+    }
+    const where = condicoes.length > 0
+        ? `WHERE ${condicoes.join(" AND ")}`
+        : "";
+    const [contagem] = await pool.execute(
+        `SELECT COUNT(*) AS total FROM chamados ${where}`,
+        parametros
     );
-
-    return linhas;
+    const totalChamados = contagem[0].total;
+    const offset = (pagina - 1) * limite;
+    const [chamados] = await pool.query(
+        `SELECT * FROM chamados
+         ${where}
+         ORDER BY id ASC
+         LIMIT ? OFFSET ?`,
+        [...parametros, limite, offset]
+    );
+    return {chamados, totalChamados};
 }
+
 async function buscarChamadoPorIdService(id) {
     const [linhas] = await pool.query(
         "SELECT * FROM chamados WHERE id = ?",

@@ -1,54 +1,42 @@
-const prioridadesValidas = ["Baixa", "Média", "Alta"];
-const categoriasValidas = ["Hardware", "Rede", "Software", "Acesso", "Outro"];
-const statusValidos = ["Em andamento", "Aberto", "Finalizado"];
+const {PRIORIDADES_VALIDAS, CATEGORIAS_VALIDAS, STATUS_VALIDOS} = require("../constants/chamados.constants");
 const {criarChamadoService, atualizarChamadoService, deletarChamadoService, buscarTodosChamados, buscarChamadoPorIdService} = require("../services/chamados.service")
-async function listarChamados(req, res){
-    try{
+async function listarChamados(req, res) {
+    try {
         const {status, categoria, prioridade, pagina, limite} = req.query;
         const paginaNum = pagina === undefined ? 1 : Number(pagina);
         const limiteNum = limite === undefined ? 10 : Number(limite);
-        if(!Number.isInteger(paginaNum) || paginaNum < 1){
-            res.status(400).json({mensagem: "Página inválida"});
-            return;
+        if (!Number.isSafeInteger(paginaNum) || paginaNum < 1) {
+            return res.status(400).json({mensagem: "Página inválida"});
         }
-        if(!Number.isInteger(limiteNum) || limiteNum < 1){
-            res.status(400).json({mensagem: "Limite inválido. Informe um inteiro entre 1 e 100. "});
-            return;
+        if (!Number.isSafeInteger(limiteNum) || limiteNum < 1 || limiteNum > 100) {
+            return res.status(400).json({mensagem: "Limite inválido. Informe um inteiro entre 1 e 100."});
         }
-        if(status && !statusValidos.includes(status)){
-            res.status(400).json({mensagem: "Status inválido"});
-            return;
+        if (status && !STATUS_VALIDOS.includes(status)) {
+            return res.status(400).json({mensagem: "Status inválido"});
         }
-        if(categoria && !categoriasValidas.includes(categoria)){
-            res.status(400).json({mensagem: "Categoria inválida"});
-            return;
+        if (categoria && !CATEGORIAS_VALIDAS.includes(categoria)) {
+            return res.status(400).json({mensagem: "Categoria inválida"});
         }
-        if(prioridade && !prioridadesValidas.includes(prioridade)){
-            res.status(400).json({mensagem: "Prioridade inválida"});
-            return;
+        if (prioridade && !PRIORIDADES_VALIDAS.includes(prioridade)) {
+            return res.status(400).json({mensagem: "Prioridade inválida"});
         }
-        const chamados = await buscarTodosChamados();
-        const chamadosFiltrados = chamados.filter(chamado => (!status || chamado.status === status) && (!categoria || chamado.categoria === categoria) && (!prioridade || chamado.prioridade === prioridade));
-        const totalChamados = chamadosFiltrados.length;
+        const { chamados, totalChamados } = await buscarTodosChamados({ status, categoria, prioridade, pagina: paginaNum, limite: limiteNum
+        });
         const totalPaginas = Math.ceil(totalChamados / limiteNum);
-        if(paginaNum > totalPaginas && totalChamados > 0){
-            res.status(400).json({mensagem: "Página inválida"});
-            return;
+        if (paginaNum > totalPaginas && totalChamados > 0) {
+            return res.status(400).json({mensagem: "Página inválida"});
         }
-        const inicio = (paginaNum - 1) * limiteNum;
-        const fim = inicio + limiteNum;
-        const chamadosPaginados = chamadosFiltrados.slice(inicio, fim);
-        res.status(200).json({totalChamados, totalPaginas, pagina: paginaNum, limite: limiteNum, chamados: chamadosPaginados});
-        res.setHeader("X-Total-Chamados", totalChamados);
-        res.setHeader("X-Total-Paginas", totalPaginas);
-        res.setHeader("X-Pagina-Atual", paginaNum);
-        res.setHeader("X-Limite", limiteNum);
-        return res.json(chamadosPaginados);
+        res.setHeader("X-Total-Chamados", String(totalChamados));
+        res.setHeader("X-Total-Paginas", String(totalPaginas));
+        res.setHeader("X-Pagina-Atual", String(paginaNum));
+        res.setHeader("X-Chamados-Por-Pagina", String(limiteNum));
+        return res.status(200).json({totalChamados, totalPaginas, pagina: paginaNum, limite: limiteNum, chamados});
     } catch (erro) {
         console.error("Erro ao listar chamados:", erro);
-        res.status(500).json({mensagem: "Erro ao listar chamados"});
+        return res.status(500).json({mensagem: "Erro interno ao listar chamados"});
     }
-};
+}
+
 async function buscarChamadoPorId(req, res){
     try{
         const id = Number(req.params.id);
@@ -87,10 +75,10 @@ async function atualizarChamado(req, res){
         res.status(200).json({ mensagem: "Chamado atualizado com sucesso", chamado});
     } catch (erro) {
         if(erro.message === "Chamado não encontrado"){
-            res.status(404).json({mensagem: erro.message});
+            return res.status(404).json({mensagem: erro.message});
         }
         if(erro.message === "Status inválido"){
-            res.status(400).json({mensagem: erro.message});
+            return res.status(400).json({mensagem: erro.message});
         }
         console.error("Erro ao atualizar chamado:", erro);
         res.status(500).json({mensagem: "Erro interno ao atualizar o chamado"});
