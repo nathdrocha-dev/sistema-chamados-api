@@ -1,6 +1,7 @@
 const {PRIORIDADES_VALIDAS, CATEGORIAS_VALIDAS, STATUS_VALIDOS} = require("../constants/chamados.constants");
+const AppError = require("../errors/AppError");
 const {criarChamadoService, atualizarChamadoService, deletarChamadoService, buscarTodosChamados, buscarChamadoPorIdService} = require("../services/chamados.service")
-async function listarChamados(req, res) {
+async function listarChamados(req, res, next) {
     try {
         const {status, categoria, prioridade, pagina, limite} = req.query;
         const paginaNum = pagina === undefined ? 1 : Number(pagina);
@@ -32,12 +33,11 @@ async function listarChamados(req, res) {
         res.setHeader("X-Chamados-Por-Pagina", String(limiteNum));
         return res.status(200).json({totalChamados, totalPaginas, pagina: paginaNum, limite: limiteNum, chamados});
     } catch (erro) {
-        console.error("Erro ao listar chamados:", erro);
-        return res.status(500).json({mensagem: "Erro interno ao listar chamados"});
+        return next(erro);
     }
 }
 
-async function buscarChamadoPorId(req, res){
+async function buscarChamadoPorId(req, res, next){
     try{
         const id = Number(req.params.id);
         if(!Number.isSafeInteger(id) || id <= 0){
@@ -49,23 +49,18 @@ async function buscarChamadoPorId(req, res){
         }
         res.json(chamado);
     } catch(erro){
-        console.error("Erro ao buscar chamado por ID:", erro);
-        res.status(500).json({mensagem: "Erro interno ao buscar o chamado"});
+        return next(erro);
     }
 };
-async function criarChamado(req, res){
+async function criarChamado(req, res, next){
     try{
         const chamado = await criarChamadoService(req.body);
         res.status(201).json({mensagem: "Chamado criado com sucesso", chamado});
     } catch(erro){
-        if(erro.message === "Todos os campos são obrigatórios!" || erro.message === "Prioridade Inválida!" || erro.message === "Categoria Inválida!"){
-            res.status(400).json({mensagem: erro.message});
-        } else {
-            res.status(500).json({mensagem: "Erro interno ao criar o chamado"});
-        }
+        return next(erro);
     }
 };
-async function atualizarChamado(req, res){
+async function atualizarChamado(req, res, next){
     try{
         const id = Number(req.params.id);
         if(!Number.isSafeInteger(id) || id <= 0){
@@ -74,17 +69,10 @@ async function atualizarChamado(req, res){
         const chamado = await atualizarChamadoService(id, req.body);
         res.status(200).json({ mensagem: "Chamado atualizado com sucesso", chamado});
     } catch (erro) {
-        if(erro.message === "Chamado não encontrado"){
-            return res.status(404).json({mensagem: erro.message});
-        }
-        if(erro.message === "Status inválido"){
-            return res.status(400).json({mensagem: erro.message});
-        }
-        console.error("Erro ao atualizar chamado:", erro);
-        res.status(500).json({mensagem: "Erro interno ao atualizar o chamado"});
+        return next(erro);
     }
 };
-async function deletarChamado(req, res){
+async function deletarChamado(req, res, next){
     try{
             const id = await Number(req.params.id);
             if(!Number.isSafeInteger(id) || id <= 0){
@@ -93,11 +81,7 @@ async function deletarChamado(req, res){
             const chamado = await deletarChamadoService(id);
             res.status(200).json({ mensagem: `Chamado ${chamado.id} deletado com sucesso`, chamado});
     } catch (erro){
-        if(erro.message === "Chamado não encontrado"){
-            res.status(404).json({mensagem: erro.message});
-        }
-        console.error("Erro ao deletar chamado:", erro);
-        res.status(500).json({mensagem: "Erro interno ao deletar o chamado"});
+        return next(erro);
     }
 }
 module.exports = {listarChamados, buscarChamadoPorId, criarChamado, atualizarChamado, deletarChamado};

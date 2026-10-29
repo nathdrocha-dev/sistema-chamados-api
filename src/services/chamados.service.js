@@ -1,14 +1,15 @@
 const {PRIORIDADES_VALIDAS, CATEGORIAS_VALIDAS, STATUS_VALIDOS} = require("../constants/chamados.constants");
+const AppError = require("../errors/AppError");
 async function criarChamadoService(dados){
     const {titulo, descricao, solicitante, categoria, prioridade} = dados;
     if(!titulo || !descricao || !solicitante || !categoria || !prioridade){
-            throw new Error("Todos os campos são obrigatórios!")
+            throw new AppError("Todos os campos são obrigatórios!", 400);
         }
         if(!PRIORIDADES_VALIDAS.includes(prioridade)){
-            throw new Error("Prioridade Inválida!")
+            throw new AppError("Prioridade Inválida!", 400);
         }
         if(!CATEGORIAS_VALIDAS.includes(categoria)){
-            throw new Error("Categoria Inválida!")
+            throw new AppError("Categoria Inválida!", 400);
         }
         const [resultado] = await pool.query(`
             INSERT INTO chamados (titulo, descricao, solicitante, categoria, prioridade, status)
@@ -22,10 +23,10 @@ async function atualizarChamadoService(id, dados){
     const {status} = dados;
     const chamado = await buscarChamadoPorIdService(idNumerico);
     if(!chamado){
-       throw new Error("Chamado não encontrado");
+       throw new AppError("Chamado não encontrado", 404);
     }
     if(!STATUS_VALIDOS.includes(status)){
-        throw new Error("Status inválido");
+        throw new AppError("Status inválido", 400);
     }
     await pool.execute(`UPDATE chamados SET status = ? WHERE id = ?`, [status, idNumerico]);
     const chamadoAtualizado = await buscarChamadoPorIdService(idNumerico);
@@ -34,11 +35,11 @@ async function atualizarChamadoService(id, dados){
 async function deletarChamadoService(id){
     const chamado = await buscarChamadoPorIdService(id);
     if(!chamado){
-        throw new Error("Chamado não encontrado");
+        throw new AppError("Chamado não encontrado", 404);
     }
     const [resultado] = await pool.execute(`DELETE FROM chamados WHERE id = ?`, [id]);
     if(resultado.affectedRows === 0){
-        throw new Error("Chamado não encontrado");
+        throw new AppError("Chamado não encontrado", 404);
     }
     return chamado;
 }
