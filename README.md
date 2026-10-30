@@ -1,120 +1,86 @@
 # Sistema de Chamados — API REST
+
 [![Testes da API](https://github.com/nathdrocha-dev/sistema-chamados-api/actions/workflows/tests.yml/badge.svg)](https://github.com/nathdrocha-dev/sistema-chamados-api/actions/workflows/tests.yml)
+
 API REST para gerenciamento de chamados de suporte técnico, desenvolvida com **Node.js, Express e MySQL**.
 
-O sistema permite cadastrar, consultar, atualizar e excluir chamados, além de oferecer filtros, paginação, validação de dados e tratamento centralizado de erros.
-
-O projeto foi desenvolvido com foco no aprendizado e na aplicação prática de conceitos de desenvolvimento Back-end, arquitetura em camadas, bancos de dados relacionais e testes automatizados.
-
-## Tecnologias utilizadas
-
-- **Node.js** — Ambiente de execução JavaScript.
-- **Express 5** — Framework para construção da API REST.
-- **MySQL** — Banco de dados relacional.
-- **MySQL2** — Integração entre Node.js e MySQL.
-- **dotenv** — Gerenciamento de variáveis de ambiente.
-- **Jest** — Framework de testes automatizados.
-- **Supertest** — Testes de integração HTTP.
+> **Projeto de estudos.** Desenvolvido por [Seu nome], estudante de Técnico em Informática, para praticar desenvolvimento Back-end: API REST, arquitetura em camadas, banco de dados relacional e testes automatizados.
 
 ## Funcionalidades
 
-- Cadastro de chamados.
-- Consulta de chamados por ID.
-- Listagem de chamados.
+- Cadastro, consulta por ID, listagem, atualização de status e exclusão de chamados.
 - Filtros por status, categoria e prioridade.
 - Paginação de resultados.
-- Atualização do status de chamados.
-- Exclusão de chamados.
 - Validação dos dados recebidos.
 - Tratamento centralizado de erros.
-- Testes unitários e de integração.
+- Testes unitários e de integração com banco de dados separado.
+- Execução dos testes via GitHub Actions.
 
-## Estrutura do projeto
+## Tecnologias
 
-```text
-sistema-chamados/
+| Tecnologia | Uso |
+|---|---|
+| Node.js | Ambiente de execução |
+| Express 5 | Framework da API REST |
+| MySQL + mysql2 | Banco de dados relacional e driver |
+| dotenv | Variáveis de ambiente |
+| Jest + Supertest | Testes unitários e de integração HTTP |
+
+## Arquitetura
+
+```
+sistema-chamados-api/
+├── .github/workflows/     # Pipeline de testes (GitHub Actions)
 ├── database/
-│   └── schema.sql
-│   └── schema.test.sql
+│   ├── schema.sql         # Banco da aplicação
+│   └── schema.test.sql    # Banco de testes
 ├── src/
-│   ├── constants/
-│   ├── controllers/
-│   ├── errors/
-│   ├── middlewares/
-│   ├── routes/
-│   ├── services/
-│   ├── validators/
-│   ├── app.js
-│   ├── database.js
-│   └── index.js
-├── tests/
-│   ├── chamados.crud.test.js
-│   ├── chamados.filtros.test.js
-│   ├── chamados.independentes.test.js
-│   ├── chamados.test.js
-│   ├── chamados.validator.test.js
-│   ├── database.test.js
-│   ├── errorHandler.test.js
-│   ├── setup.js
-│   └── teardown.js
+│   ├── constants/         # Valores permitidos (categorias, prioridades, status)
+│   ├── controllers/       # Recebem a requisição e montam a resposta HTTP
+│   ├── errors/            # Erros personalizados
+│   ├── middlewares/       # Tratamento global de erros
+│   ├── routes/            # Definição dos endpoints
+│   ├── services/          # Regras de negócio e consultas SQL
+│   ├── validators/        # Validação e normalização dos dados
+│   ├── app.js             # Configuração do Express
+│   ├── database.js        # Pool de conexões MySQL
+│   └── index.js           # Inicialização do servidor
+├── tests/                 # Testes automatizados (Jest + Supertest)
 ├── .env.example
-├── .gitignore
 ├── jest.config.js
-├── package.json
-└── README.md
+└── package.json
 ```
 
-### Organização da arquitetura
+Fluxo de uma requisição: **routes → controllers → validators/services → banco de dados**, com erros tratados por um middleware central.
 
-**Routes:** definição dos endpoints.
+## Como executar
 
-**Controllers:** recebimento das requisições e construção das respostas HTTP.
+### Pré-requisitos
 
-**Services:** operações de negócio e consultas SQL.
-
-**Validators:** validação e normalização dos dados.
-
-**Middlewares:** tratamento global de erros.
-
-**Database:** configuração do pool de conexões MySQL.
-
-## Requisitos
-
-- Node.js e npm instalados.
+- Node.js 18 ou superior (requisito do Express 5) e npm.
 - MySQL instalado e em execução.
-- Um cliente MySQL, como MySQL Workbench, para executar o script de criação do banco.
 
-## Instalação
-
-### 1. Clonar o repositório
+### 1. Clonar e instalar
 
 ```bash
 git clone https://github.com/nathdrocha-dev/sistema-chamados-api.git
 cd sistema-chamados-api
-```
-
-### 2. Instalar as dependências
-
-```bash
 npm install
 ```
 
-### 3. Criar o banco de dados
+### 2. Criar o banco de dados
 
-O projeto utiliza MySQL para armazenar os chamados e possui dois bancos separados: um para a aplicação e outro para os testes automatizados.
+O script cria o banco `sistema_chamados` e a tabela `chamados`. Execute-o pelo MySQL Workbench (abra `database/schema.sql` e execute o script completo) ou pelo terminal:
 
-### Banco principal
+```bash
+mysql -u root -p < database/schema.sql
+```
 
-1. Inicie o servidor MySQL.
-2. Abra o MySQL Workbench.
-3. Abra o arquivo `database/schema.sql`.
-4. Execute o script completo.
+### 3. Configurar as variáveis de ambiente
 
-O script criará o banco `sistema_chamados` e a tabela `chamados`.
+Crie o arquivo `.env` na raiz, a partir de `.env.example`:
 
-Na raiz do projeto, crie o arquivo `.env` utilizando `.env.example` como referência:
-
-```dotenv
+```env
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root
@@ -122,105 +88,35 @@ DB_PASSWORD=sua_senha
 DB_NAME=sistema_chamados
 ```
 
-Substitua os valores pelas configurações do seu ambiente.
+> Os arquivos `.env` e `.env.test` contêm credenciais locais e não devem ser enviados ao GitHub.
 
-### Banco de testes
-
-Para executar os testes automatizados:
-
-1. Abra o MySQL Workbench.
-2. Abra o arquivo `database/schema.test.sql`.
-3. Execute o script completo.
-4. Confirme que o banco `sistema_chamados_test` foi criado.
-5. Crie o arquivo `.env.test` na raiz do projeto:
-
-```dotenv
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=sua_senha
-DB_NAME=sistema_chamados_test
-```
-
-**Atenção:** utilize exclusivamente o banco `sistema_chamados_test` durante os testes. Os testes de integração criam, atualizam e excluem registros.
-
-Os arquivos `.env` e `.env.test` contêm credenciais locais e não devem ser publicados no GitHub.
-
-### Executando os testes
-
-Para executar todos os testes:
-
-```bash
-npm test
-```
-
-Para executar os testes e gerar o relatório de cobertura:
-
-```bash
-npm test -- --coverage
-```
-
-O relatório HTML estará disponível em:
-
-```text
-coverage/lcov-report/index.html
-```
-
-Abra esse arquivo no navegador para visualizar as linhas e condições exercitadas pelos testes.
-
-### 4. Configurar as variáveis de ambiente
-
-Crie um arquivo `.env` na raiz do projeto, utilizando `.env.example` como referência:
-
-```dotenv
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=sua_senha
-DB_NAME=sistema_chamados
-```
-
-Não publique credenciais reais no repositório.
-
-### 5. Iniciar a aplicação
-
-Execute o comando:
+### 4. Iniciar a API
 
 ```bash
 npm start
 ```
 
-O servidor será iniciado na porta **3000**.
+O servidor sobe em `http://localhost:3000`. <!-- VERIFICAR: a porta é fixa no código ou aceita PORT no .env? -->
 
-A API ficará disponível em:
+Teste rápido:
 
-```text
-http://localhost:3000
+```bash
+curl http://localhost:3000/chamados
 ```
 
-Para consultar os chamados:
+Também é possível usar Postman, Insomnia ou outro cliente HTTP.
 
-```http
-GET http://localhost:3000/chamados
-```
+## Endpoints
 
-As requisições podem ser realizadas utilizando Postman ou outro cliente HTTP.
-
-## Endpoints da API
-
-| Método | Endpoint | Descrição |
+| Método | Rota | Descrição |
 |---|---|---|
-| GET | `/chamados` | Lista os chamados |
+| GET | `/chamados` | Lista chamados (com filtros e paginação) |
 | GET | `/chamados/:id` | Busca um chamado por ID |
-| POST | `/chamados` | Cria um novo chamado |
+| POST | `/chamados` | Cria um chamado |
 | PUT | `/chamados/:id` | Atualiza o status de um chamado |
 | DELETE | `/chamados/:id` | Exclui um chamado |
 
-### Criar chamado
-
-**POST `/chamados`**
-
-Corpo da requisição:
+### POST `/chamados`
 
 ```json
 {
@@ -232,47 +128,33 @@ Corpo da requisição:
 }
 ```
 
-O status inicial do chamado é `Aberto`.
+O status inicial é `Aberto`. Retorna `201 Created`. <!-- VERIFICAR: campos obrigatórios, limites de tamanho e adicionar um exemplo do JSON retornado -->
 
-**Resposta esperada:** HTTP `201 Created`.
+### GET `/chamados`
 
-### Consultar chamado
-
-**GET `/chamados/1`**
-
-Retorna o chamado correspondente ao identificador informado.
-
-Se o chamado não existir, a API retorna HTTP `404 Not Found`.
-
-### Listar chamados
-
-**GET `/chamados`**
-
-A listagem permite utilizar parâmetros de consulta opcionais:
+Parâmetros de consulta opcionais:
 
 | Parâmetro | Descrição |
 |---|---|
-| `status` | Filtra pelo status |
-| `categoria` | Filtra pela categoria |
-| `prioridade` | Filtra pela prioridade |
-| `pagina` | Número da página, padrão 1 |
-| `limite` | Quantidade de registros por página, padrão 10 |
+| `status` | Filtra por status |
+| `categoria` | Filtra por categoria |
+| `prioridade` | Filtra por prioridade |
+| `pagina` | Número da página (padrão: 1) |
+| `limite` | Registros por página (padrão: 10, máximo: 100) |
 
-O limite máximo permitido é de 100 registros por página.
-
-Exemplo:
-
-```http
+```
 GET /chamados?categoria=Hardware&prioridade=Alta&pagina=1&limite=5
 ```
 
-A resposta inclui os chamados encontrados e metadados de paginação, como total de registros, total de páginas, página atual e limite.
+A resposta traz os chamados encontrados e metadados de paginação: total de registros, total de páginas, página atual e limite. <!-- VERIFICAR: incluir um exemplo real da resposta JSON -->
 
-### Atualizar chamado
+### GET `/chamados/:id`
 
-**PUT `/chamados/1`**
+Retorna o chamado informado ou `404 Not Found` se ele não existir.
 
-Corpo da requisição:
+### PUT `/chamados/:id`
+
+Atualiza apenas o status do chamado:
 
 ```json
 {
@@ -280,35 +162,19 @@ Corpo da requisição:
 }
 ```
 
-### Excluir chamado
+### DELETE `/chamados/:id`
 
-**DELETE `/chamados/1`**
+Remove o chamado informado. <!-- VERIFICAR: código de sucesso (200 ou 204) e retorno para ID inexistente -->
 
-Remove o chamado correspondente ao ID informado.
+### Valores permitidos
 
-## Valores permitidos
+| Campo | Valores |
+|---|---|
+| `categoria` | Hardware, Software, Rede, Acesso, Outro |
+| `prioridade` | Baixa, Média, Alta |
+| `status` | Aberto, Em andamento, Finalizado |
 
-**Categorias**
-
-- Hardware
-- Software
-- Rede
-- Acesso
-- Outro
-
-**Prioridades**
-
-- Baixa
-- Média
-- Alta
-
-**Status**
-
-- Aberto
-- Em andamento
-- Finalizado
-
-## Códigos HTTP
+### Códigos HTTP
 
 | Código | Significado |
 |---|---|
@@ -318,57 +184,61 @@ Remove o chamado correspondente ao ID informado.
 | 404 | Chamado não encontrado |
 | 500 | Erro interno do servidor |
 
-## Testes automatizados
+## Testes
 
-O projeto utiliza Jest e Supertest para verificar as funcionalidades da API.
+Os testes usam Jest e Supertest e cobrem operações CRUD, integração com MySQL, validações, filtros, paginação, tratamento de erros e cenários de sucesso e falha.
 
-Os testes incluem:
+Eles rodam em um banco separado, `sistema_chamados_test`, porque criam, atualizam e excluem registros. **Nunca aponte o `.env.test` para o banco principal.**
 
-- Operações CRUD.
-- Integração com MySQL.
-- Validações de dados.
-- Filtros e paginação.
-- Tratamento de erros.
-- Cenários de sucesso e falha.
-
-Os testes de integração utilizam o banco `sistema_chamados_test`, separado do banco principal.
-
-Antes de executá-los, configure o arquivo `.env.test` e crie a estrutura necessária no banco de testes.
-
-### Executar os testes
+### Configurar o banco de testes
 
 ```bash
-npm test
+mysql -u root -p < database/schema.test.sql
 ```
 
-### Gerar relatório de cobertura
+Crie o arquivo `.env.test` na raiz:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=sua_senha
+DB_NAME=sistema_chamados_test
+```
+
+### Executar
 
 ```bash
-npm test -- --coverage
+npm test                    # executa os testes
+npm test -- --coverage      # gera o relatório de cobertura
 ```
 
-### Resultados obtidos durante o desenvolvimento
+O relatório HTML fica em `coverage/lcov-report/index.html`.
+
+### Cobertura de referência
 
 | Métrica | Resultado |
 |---|---:|
-| Testes aprovados | 38 |
-| Suítes aprovadas | 7 |
-| Cobertura de linhas | 90,56% |
-| Cobertura de decisões | 87,20% |
-| Cobertura de funções | 100% |
+| Testes aprovados | 38 (7 suítes) |
+| Linhas | 90,56% |
+| Decisões | 87,20% |
+| Funções | 100% |
 
-Esses resultados correspondem à execução de referência realizada durante o desenvolvimento.
+Valores de uma execução local durante o desenvolvimento. Podem mudar conforme o código evolui; rode `npm test -- --coverage` para o resultado atual.
 
-## Melhorias futuras
+## Limitações conhecidas e próximos passos
+
+Por ser um projeto de estudos, a API não possui:
 
 - Autenticação e autorização de usuários.
+- Edição dos demais campos do chamado (hoje o `PUT` altera só o status).
 - Histórico de alterações dos chamados.
-- Interface web para gerenciamento.
-- Documentação interativa com OpenAPI/Swagger.
-- Implantação da aplicação em um servidor.
+- Documentação interativa (OpenAPI/Swagger).
+- Interface web e implantação em servidor.
 
-## Sobre o projeto
+Esses são os próximos itens que pretendo estudar e implementar.
 
-Projeto desenvolvido para aplicar conhecimentos de JavaScript, Node.js, Express, MySQL, arquitetura de APIs REST e testes automatizados.
+## Autoria
 
-Seu objetivo é demonstrar a construção de uma aplicação Back-end organizada, testável e integrada a um banco de dados relacional.
+**Nathan David** — estudante de Técnico em Informática
+[LinkedIn](www.linkedin.com/in/nathan-david-77777n) · [GitHub](https://github.com/nathdrocha-dev)
