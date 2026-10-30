@@ -88,8 +88,8 @@ sistema-chamados/
 ### 1. Clonar o repositório
 
 ```bash
-git clone URL_DO_REPOSITORIO
-cd sistema-chamados
+git clone https://github.com/nathdrocha-dev/sistema-chamados-api.git
+cd sistema-chamados-api
 ```
 
 ### 2. Instalar as dependências
