@@ -7,15 +7,14 @@
     "start": "node src/index.js",
     "test": "jest --runInBand"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["api-rest", "nodejs", "express", "mysql", "jest", "supertest", "chamados"],
+  "author": "Nathan David",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^18.0.9",
     "express": "^5.2.1",
-    "mysql2": "^3.24.6",
-    "typescript": "^7.0.2"
+    "mysql2": "^3.24.6"
   },
   "devDependencies": {
     "jest": "^30.5.2",
