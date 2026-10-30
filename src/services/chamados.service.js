@@ -1,7 +1,8 @@
 const {PRIORIDADES_VALIDAS, CATEGORIAS_VALIDAS, STATUS_VALIDOS} = require("../constants/chamados.constants");
+const {validarCriacaoChamado, validarAtualizacaoChamado} = require("../validators/chamados.validator");
 const AppError = require("../errors/AppError");
 async function criarChamadoService(dados){
-    const {titulo, descricao, solicitante, categoria, prioridade} = dados;
+    const {titulo, descricao, solicitante, categoria, prioridade} = validarCriacaoChamado(dados);
     if(!titulo || !descricao || !solicitante || !categoria || !prioridade){
             throw new AppError("Todos os campos são obrigatórios!", 400);
         }
@@ -20,7 +21,7 @@ async function criarChamadoService(dados){
 };
 async function atualizarChamadoService(id, dados){
     const idNumerico = Number(id);
-    const {status} = dados;
+    const {status} = validarAtualizacaoChamado(dados);
     const chamado = await buscarChamadoPorIdService(idNumerico);
     if(!chamado){
        throw new AppError("Chamado não encontrado", 404);
