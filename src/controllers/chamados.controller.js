@@ -74,7 +74,7 @@ async function atualizarChamado(req, res, next){
 };
 async function deletarChamado(req, res, next){
     try{
-            const id = await Number(req.params.id);
+            const id = Number(req.params.id);
             if(!Number.isSafeInteger(id) || id <= 0){
                 return res.status(400).json({mensagem: "ID inválido"});
             }

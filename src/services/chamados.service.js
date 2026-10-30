@@ -3,21 +3,12 @@ const {validarCriacaoChamado, validarAtualizacaoChamado} = require("../validator
 const AppError = require("../errors/AppError");
 async function criarChamadoService(dados){
     const {titulo, descricao, solicitante, categoria, prioridade} = validarCriacaoChamado(dados);
-    if(!titulo || !descricao || !solicitante || !categoria || !prioridade){
-            throw new AppError("Todos os campos são obrigatórios!", 400);
-        }
-        if(!PRIORIDADES_VALIDAS.includes(prioridade)){
-            throw new AppError("Prioridade Inválida!", 400);
-        }
-        if(!CATEGORIAS_VALIDAS.includes(categoria)){
-            throw new AppError("Categoria Inválida!", 400);
-        }
-        const [resultado] = await pool.query(`
-            INSERT INTO chamados (titulo, descricao, solicitante, categoria, prioridade, status)
-            VALUES (?, ?, ?, ?, ?, ?)
+    const [resultado] = await pool.query(`
+        INSERT INTO chamados (titulo, descricao, solicitante, categoria, prioridade, status)
+        VALUES (?, ?, ?, ?, ?, ?)
         `, [titulo, descricao, solicitante, categoria, prioridade, "Aberto"]);
-        const [linhas] = await pool.execute(`SELECT * FROM chamados WHERE id = ?`, [resultado.insertId]);
-        return linhas[0];
+    const [linhas] = await pool.execute(`SELECT * FROM chamados WHERE id = ?`, [resultado.insertId]);
+    return linhas[0];
 };
 async function atualizarChamadoService(id, dados){
     const idNumerico = Number(id);
@@ -25,9 +16,6 @@ async function atualizarChamadoService(id, dados){
     const chamado = await buscarChamadoPorIdService(idNumerico);
     if(!chamado){
        throw new AppError("Chamado não encontrado", 404);
-    }
-    if(!STATUS_VALIDOS.includes(status)){
-        throw new AppError("Status inválido", 400);
     }
     await pool.execute(`UPDATE chamados SET status = ? WHERE id = ?`, [status, idNumerico]);
     const chamadoAtualizado = await buscarChamadoPorIdService(idNumerico);

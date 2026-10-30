@@ -1,6 +1,24 @@
 const mysql = require("mysql2/promise");
+const path = require("node:path");
+const dotenv = require("dotenv");
 
-require("dotenv").config();
+const arquivoAmbiente = process.env.NODE_ENV === "test"
+    ? ".env.test"
+    : ".env";
+
+dotenv.config({
+    path: path.resolve(__dirname, "..", arquivoAmbiente),
+    quiet: true
+});
+
+if (
+    process.env.NODE_ENV === "test" &&
+    process.env.DB_NAME !== "sistema_chamados_test"
+) {
+    throw new Error(
+        "Os testes devem utilizar exclusivamente o banco sistema_chamados_test."
+    );
+}
 
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
