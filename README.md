@@ -1,5 +1,5 @@
 # Sistema de Chamados — API REST
-
+[![Testes da API](https://github.com/nathdrocha-dev/sistema-chamados-api/actions/workflows/tests.yml/badge.svg)](https://github.com/nathdrocha-dev/sistema-chamados-api/actions/workflows/tests.yml)
 API REST para gerenciamento de chamados de suporte técnico, desenvolvida com **Node.js, Express e MySQL**.
 
 O sistema permite cadastrar, consultar, atualizar e excluir chamados, além de oferecer filtros, paginação, validação de dados e tratamento centralizado de erros.
@@ -35,6 +35,7 @@ O projeto foi desenvolvido com foco no aprendizado e na aplicação prática de 
 sistema-chamados/
 ├── database/
 │   └── schema.sql
+│   └── schema.test.sql
 ├── src/
 │   ├── constants/
 │   ├── controllers/
