@@ -1,4 +1,13 @@
+# Dependências
 node_modules/
+
+# Variáveis de ambiente
 .env
 .env.*
 !.env.example
+
+# Relatórios de cobertura
+coverage/
+
+# Arquivos de log
+*.log
